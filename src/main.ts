@@ -1,42 +1,33 @@
 import "./style.css";
 import { UI } from "@peasy-lib/peasy-ui";
+import { v4 as uuidv4 } from "uuid";
 
 let index = 0;
 
 const model = {
   branches: <any>[],
   currentBranch: 0,
-  get getGetData() {
-    return this.branches;
-  },
-  get getConditions() {
-    const newArray: any = [];
-    Object.keys(this.branches[this.currentBranch].conditions).forEach(o => {
-      newArray.push({ id: o, entry: this.branches[this.currentBranch].conditions[o] });
-    });
-    return newArray;
-  },
+
   insertData: (_event: any, model: any) => {
     model.branches.push({
       id: index,
-      conditions: {},
+      conditions: [],
     });
+    index++;
   },
-  insertCondition: (_event: any, model: any) => {
-    const key = window.prompt("insert key");
-    if (key) model.branches[model.currentBranch].conditions[key] = false;
+  insertCondition: (_event: any, model: any, element: any, attribute: any, object: any) => {
+    model.branches[model.currentBranch].conditions.push({
+      id: uuidv4(),
+      entry: false,
+      toggle: (_event: any, model: any) => {
+        if (model.c.entry) model.c.entry = false;
+        else model.c.entry = true;
+      },
+    });
+    console.log(object);
   },
-  toggleFlag: (event: any, model: any, element: HTMLElement, _attribute: any, object: any) => {
-    const key = element.getAttribute("data-key");
-    console.log(key);
-
-    console.log(object.$parent.$parent.$model);
-
-    if (object.$parent.$parent.$model.branches[object.$parent.$parent.$model.currentBranch].conditions[<string>key])
-      object.$parent.$parent.$model.branches[object.$parent.$parent.$model.currentBranch].conditions[<string>key] = false;
-    else object.$parent.$parent.$model.branches[object.$parent.$parent.$model.currentBranch].conditions[<string>key] = true;
-
-    console.log(object.$parent.$parent.$model.branches[object.$parent.$parent.$model.currentBranch].conditions[<string>key]);
+  switchBranch: (_event: any, model: any, element: HTMLElement) => {
+    model.currentBranch = element.getAttribute("data-id");
   },
 };
 
@@ -44,13 +35,14 @@ const template = `
 <div>
   <a href="#" \${click@=>insertData}>Insert New Data</a>
   <a href="#" \${click@=>insertCondition}>Insert New Condition</a>
-  <div \${d<=*getGetData}>
+  <div \${d<=*branches}>
+    <p \${click@=>switchBranch} data-id="\${d.$index}">Branch: \${d.$index}</p>
     Conditions:
-    <div style="width: 200px; border: 1px solid white; display: flex; justify-content: space-evenly; align-items: flex-start" \${c<=*getConditions:id}>
+    <div style="width: 400px; border: 1px solid white; display: flex; justify-content: space-evenly; align-items: flex-start" \${c<=*d.conditions}>
       <div>\${c.id}</div>
       <span>:</span>
       <div>\${c.entry}</div>
-      <a href="#"  \${click@=>toggleFlag} data-key="\${c.id}">Toggle Flag</a>
+      <a href="#"  \${click@=>c.toggle} data-branch="\${d.$index}" data-key="\${c.id}">Toggle Flag</a>
     </div>  
   
   </div>
